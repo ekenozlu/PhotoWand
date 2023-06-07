@@ -18,4 +18,4 @@ In this demo app I created a photo manipulating application on Swift with Storyb
 
 | Main Screen | Filters List    | Save Screen      |
 | ----------- | --------------- | ---------------- |
-| ![Game Screen](https://github.com/ekenozlu/DemoConnect4App/blob/main/game_screen.png "Game Screen") | ![Game Win Screen](https://github.com/ekenozlu/DemoConnect4App/blob/main/win_screen.png "Game Win Screen") | ![Game Draw Screen](https://github.com/ekenozlu/DemoConnect4App/blob/main/draw_screen.png "Timer Screen") |
+| ![Main Screen](https://github.com/ekenozlu/PhotoWand/blob/main/GitImages/main_screen.png "Main Screen") | ![Filters List](https://github.com/ekenozlu/PhotoWand/blob/main/GitImages/fliters_list_screen.png "Filters List") | ![Save Screen](https://github.com/ekenozlu/PhotoWand/blob/main/GitImages/save_screen.png "Save Screen") |
