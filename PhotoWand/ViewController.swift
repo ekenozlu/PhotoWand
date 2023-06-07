@@ -8,11 +8,16 @@
 import UIKit
 import CoreImage
 
-class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UICollectionViewDataSource, UICollectionViewDelegate {
 
     @IBOutlet weak var imageView: UIImageView!
+    
+    @IBOutlet weak var filtersCollectionView: UICollectionView!
+    
     @IBOutlet weak var intensitySlider: UISlider!
     
+    @IBOutlet weak var saveButton: UIButton!
+
     var currentImage: UIImage!
     
     var context: CIContext!
@@ -21,19 +26,16 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        setFiltersArray()
+        
         context = CIContext()
         currentFilter = CIFilter(name: "CISepiaTone")
+        saveButton.isEnabled = false
     }
-    
-    
     
     @IBAction func addTapped(_ sender: Any) {
-        let picker = UIImagePickerController()
-        picker.allowsEditing = true
-        picker.delegate = self
-        present(picker,animated: true)
+        showImagePickerOptions()
     }
-    
     
     @IBAction func intensitySliderChanged(_ sender: Any) {
         applyProcessing()
@@ -41,7 +43,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     @IBAction func saveTapped(_ sender: Any) {
         guard let image = imageView.image else { return }
-        UIImageWriteToSavedPhotosAlbum(image, self, #selector(blabla(_:didFinishSavingWithError:contextInfo:)), nil)
+        UIImageWriteToSavedPhotosAlbum(image, self, #selector(saveImage(_:didFinishSavingWithError:contextInfo:)), nil)
         
     }
     
@@ -64,12 +66,54 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         present(ac, animated: true)
     }
     
+    func showImagePickerOptions() {
+        let ac = UIAlertController(title: "Pick a photo for editing",
+                                   message: "Take a new one from camera or chooes from Library",
+                                   preferredStyle: .actionSheet)
+        
+        //From Camera
+        let cameraAction = UIAlertAction(title: "Camera", style: .default) { [weak self] (action) in
+            guard let self = self else { return }
+            let cameraImagePicker = self.imagePicker(sourceType: .camera)
+            cameraImagePicker.delegate = self
+            self.present(cameraImagePicker, animated: true) {
+                // TO DO
+            }
+        }
+        
+        //From Library
+        let libraryAction = UIAlertAction(title: "Library", style: .default) { [weak self] (action) in
+            guard let self = self else { return }
+            let libraryImagePicker = self.imagePicker(sourceType: .photoLibrary)
+            libraryImagePicker.delegate = self
+            self.present(libraryImagePicker, animated: true) {
+                // TO DO
+            }
+        }
+        
+        //Cancel
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+        
+        ac.addAction(cameraAction)
+        ac.addAction(libraryAction)
+        ac.addAction(cancelAction)
+        self.present(ac, animated: true)
+    }
+    
+    func imagePicker(sourceType: UIImagePickerController.SourceType) -> UIImagePickerController {
+        let imagePicker = UIImagePickerController()
+        imagePicker.sourceType = sourceType
+        return imagePicker
+    }
+    
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-        guard let image = info[.editedImage] as? UIImage else {
+        guard let image = info[.originalImage] as? UIImage else {
             return
         }
         dismiss(animated: true)
         currentImage = image
+        
+        saveButton.isEnabled = true
         
         let beginImage = CIImage(image: currentImage)
         currentFilter.setValue(beginImage, forKey: kCIInputImageKey)
@@ -110,7 +154,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         applyProcessing()
     }
     
-    @objc func blabla(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer){
+    @objc func saveImage(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer){
         if let error = error {
             let ac = UIAlertController(title: "Save Error", message: error.localizedDescription, preferredStyle: .alert)
             ac.addAction(UIAlertAction(title: "OK", style: .default))
@@ -123,5 +167,17 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
     }
     
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return filtersArray.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = filtersCollectionView.dequeueReusableCell(withReuseIdentifier: "filterCell", for: indexPath) as! FilterCVCell
+        
+        cell.filterImage.image = filtersArray[indexPath.row].filterImage
+        cell.filterLabel.text = filtersArray[indexPath.row].filterName
+        
+        return cell
+    }
+    
 }
-
