@@ -16,9 +16,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     @IBOutlet weak var sliderValueLabel: UILabel!
     @IBOutlet weak var intensitySlider: UISlider!
     @IBOutlet weak var saveButton: UIButton!
-
-    var currentImage: UIImage!
     
+    var currentImage: UIImage!
     var currentFilter: CIFilter!
     let context = CIContext()
     
@@ -28,12 +27,16 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        setControlButtons(toEnabled: false)
         setFiltersArray()
         applySliderAndImage()
         
         currentFilter = CIFilter(name: filtersArray[currentFilterIndex].CIFilterName)
-        saveButton.isEnabled = false
-        intensitySlider.isEnabled = false
+        
+        var longPressRecogniser = UILongPressGestureRecognizer()
+        longPressRecogniser = UILongPressGestureRecognizer(target: self, action: #selector(imageLongPressed))
+        imageView.isUserInteractionEnabled = true
+        imageView.addGestureRecognizer(longPressRecogniser)
     }
     
     @IBAction func addTapped(_ sender: Any) {
@@ -97,8 +100,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         currentImage = image
         dismiss(animated: true)
         
-        saveButton.isEnabled = true
-        intensitySlider.isEnabled = true
+        setControlButtons(toEnabled: true)
         
         let beginImage = CIImage(image: currentImage)
         currentFilter.setValue(beginImage, forKey: kCIInputImageKey)
@@ -115,6 +117,15 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         cell.filterImage.image = filtersArray[indexPath.row].filterImage
         cell.filterLabel.text = filtersArray[indexPath.row].filterName
         
+        if appliedFilters.contains(where: { filter in filter.filterName == cell.filterLabel.text }) {
+            cell.filterImage.tintColor = UIColor(named: "AppGreen")
+            cell.filterLabel.textColor = UIColor(named: "AppGreen")
+        }
+        else {
+            cell.filterImage.tintColor = .label
+            cell.filterLabel.textColor = .label
+        }
+        
         return cell
     }
     
@@ -125,28 +136,26 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     func applyProcessing() {
+        filtersCollectionView.reloadData()
         appliedFilters.removeAll { filter in
             filter.CIFilterName == filtersArray[currentFilterIndex].CIFilterName
         }
-        appliedFilters.append(filtersArray[currentFilterIndex])
         
+        if intensitySlider.value != 0 {
+            appliedFilters.append(filtersArray[currentFilterIndex])
+        }
         
-        //let inputKey = filtersArray[currentFilterIndex].inputKeyName
-        //currentFilter.setValue(intensitySlider.value, forKey: inputKey!)
-        
-        //applyAllFilters(currentFilter.outputImage!)
-        
-        if let cgImage = context.createCGImage(filterApplied(currentFilter.outputImage!), from: filterApplied(currentFilter.outputImage!).extent) {
+        if let cgImage = context.createCGImage(allFiltersApplied(currentFilter.outputImage!),
+                                               from: allFiltersApplied(currentFilter.outputImage!).extent) {
             let processedImage = UIImage(cgImage: cgImage)
             self.imageView.image = processedImage
         }
     }
     
-    func filterApplied(_ image: CIImage) -> CIImage {
+    func allFiltersApplied(_ image: CIImage) -> CIImage {
         var tempImage = image
         for filter in appliedFilters {
             let tempImage2 : CIImage = tempImage.applyingFilter(filter.CIFilterName, parameters: [filter.inputKeyName:filter.defaultValue!])
-            //image.applyingFilter(filter.CIFilterName, parameters: [filter.inputKeyName:filter.defaultValue!])
             tempImage = tempImage2
         }
         return tempImage
@@ -154,11 +163,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     func setFilter() {
         guard currentImage != nil else { return }
-        
-        //currentFilter = CIFilter(name: filtersArray[currentFilterIndex].CIFilterName)
         let beginImage = CIImage(image: currentImage)
         currentFilter.setValue(beginImage, forKey: kCIInputImageKey)
-        
         applyProcessing()
     }
     
@@ -171,6 +177,22 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         sliderValueLabel.text = String(Int(intensitySlider.value * 100))
     }
     
+    @objc func imageLongPressed(recogniser:UILongPressGestureRecognizer) {
+        switch recogniser.state {
+        case .began:
+            if currentImage != nil {
+                self.imageView.image = currentImage
+            }
+            
+        case .ended:
+            if currentImage != nil {
+                applyProcessing()
+            }
+            
+        default: break
+        }
+    }
+    
     @objc func saveImage(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer){
         if let error = error {
             let ac = UIAlertController(title: "Save Error", message: error.localizedDescription, preferredStyle: .alert)
@@ -179,8 +201,35 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
         else {
             let ac = UIAlertController(title: "Saved", message: "Your image is succesfully saved", preferredStyle: .alert)
-            ac.addAction(UIAlertAction(title: "OK", style: .default))
+            ac.addAction(UIAlertAction(title: "Continue editing", style: .default))
+            ac.addAction(UIAlertAction(title: "Finish editing", style: .default, handler: { _ in
+                //Clear all
+                self.currentImage = nil
+                self.imageView.image = self.currentImage
+                self.currentFilterIndex = 0
+                self.setControlButtons(toEnabled: false)
+                self.appliedFilters.removeAll()
+                setFiltersValuesToZero()
+                self.applySliderAndImage()
+                self.filtersCollectionView.reloadData()
+            }))
             present(ac, animated: true)
         }
     }
+    
+    func setControlButtons(toEnabled boolIndex: Bool) {
+        if boolIndex {
+            saveButton.isEnabled = true
+            intensitySlider.isEnabled = true
+            currentFilterImage.tintColor = .label
+            sliderValueLabel.textColor = .label
+        }
+        else {
+            saveButton.isEnabled = false
+            intensitySlider.isEnabled = false
+            currentFilterImage.tintColor = .separator
+            sliderValueLabel.textColor = .separator
+        }
+    }
+    
 }

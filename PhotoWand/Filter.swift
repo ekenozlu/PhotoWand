@@ -8,7 +8,7 @@
 import UIKit
 import CoreImage
 
-struct Filter {
+class Filter {
     var filterImage: UIImage!
     var CIFilterName: String!
     var filterName: String!
@@ -16,6 +16,16 @@ struct Filter {
     var minValue: Float!
     var maxValue: Float!
     var defaultValue: Float!
+    
+    init(filterImage: UIImage!, CIFilterName: String!, filterName: String!, inputKeyName: String!, minValue: Float!, maxValue: Float!, defaultValue: Float!) {
+        self.filterImage = filterImage
+        self.CIFilterName = CIFilterName
+        self.filterName = filterName
+        self.inputKeyName = inputKeyName
+        self.minValue = minValue
+        self.maxValue = maxValue
+        self.defaultValue = defaultValue
+    }
 }
 
 var filtersArray = [Filter]()
@@ -77,6 +87,13 @@ func setFiltersArray() {
     filtersArray.append(GaussianBlur)
     filtersArray.append(MotionBlur)
 }
+
+func setFiltersValuesToZero() {
+    for filter in filtersArray {
+        filter.defaultValue = 0
+    }
+}
+
 
 
 
