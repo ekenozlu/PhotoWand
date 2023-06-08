@@ -72,11 +72,18 @@ var GaussianBlur        = Filter(filterImage: UIImage(systemName: "g.square"),
                                  inputKeyName: kCIInputRadiusKey,
                                  minValue: 0.0, maxValue: 1.0, defaultValue: 0.0)
 
-var MotionBlur        = Filter(filterImage: UIImage(systemName: "figure.run"),
+var MotionBlur          = Filter(filterImage: UIImage(systemName: "figure.run"),
                                  CIFilterName: "CIMotionBlur",
                                  filterName: "Motion Blur",
                                  inputKeyName: kCIInputRadiusKey,
                                  minValue: 0.0, maxValue: 1.0, defaultValue: 0.0)
+
+var TwirlDistortion     = Filter(filterImage: UIImage(systemName: "tornado"),
+                                 CIFilterName: "CITwirlDistortion",
+                                 filterName: "Twirl Distortion",
+                                 inputKeyName: kCIInputRadiusKey,
+                                 minValue: 0.0, maxValue: 200.0, defaultValue: 0.0)
+
 
 
 func setFiltersArray() {
@@ -86,6 +93,7 @@ func setFiltersArray() {
     filtersArray.append(hueFilter)
     filtersArray.append(GaussianBlur)
     filtersArray.append(MotionBlur)
+    filtersArray.append(TwirlDistortion)
 }
 
 func setFiltersValuesToZero() {
