@@ -6,8 +6,9 @@
 //
 
 import UIKit
+import CoreImage
 
-struct Filters {
+struct Filter {
     var filterImage: UIImage!
     var CIFilterName: String!
     var filterName: String!
@@ -17,19 +18,19 @@ struct Filters {
     var defaultValue: Int!
 }
 
-var filtersArray = [Filters]()
+var filtersArray = [Filter]()
 
-var exposureFilter = Filters(filterImage: UIImage(systemName: "sun.max"),
+var exposureFilter = Filter(filterImage: UIImage(systemName: "sun.max"),
                              CIFilterName: "CIExposureAdjust",
                              filterName: "Exposure",
-                             inputKeyName: "inputEV",
-                             minValue: -100, maxValue: 100, defaultValue: 0)
+                             inputKeyName: kCIInputEVKey,
+                             minValue: -1, maxValue: 1, defaultValue: 0)
 
-var contrastFilter = Filters(filterImage: UIImage(systemName: "circle.righthalf.filled"),
+var contrastFilter = Filter(filterImage: UIImage(systemName: "circle.righthalf.filled"),
                              CIFilterName: "CIColorControls",
                              filterName: "Contrast",
-                             inputKeyName: "inputContrast",
-                             minValue: -100, maxValue: 100, defaultValue: 0)
+                             inputKeyName: kCIInputContrastKey,
+                             minValue: -1, maxValue: 1, defaultValue: 0)
 
 
 func setFiltersArray() {
