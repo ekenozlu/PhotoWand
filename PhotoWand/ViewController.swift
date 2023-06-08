@@ -19,8 +19,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
 
     var currentImage: UIImage!
     
-    var context: CIContext!
     var currentFilter: CIFilter!
+    let context = CIContext()
     
     var currentFilterIndex: Int! = 0
     
@@ -30,9 +30,9 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         setFiltersArray()
         applySliderAndImage()
         
-        context = CIContext()
         currentFilter = CIFilter(name: filtersArray[currentFilterIndex].CIFilterName)
         saveButton.isEnabled = false
+        intensitySlider.isEnabled = false
     }
     
     @IBAction func addTapped(_ sender: Any) {
@@ -41,6 +41,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     @IBAction func intensitySliderChanged(_ sender: Any) {
         sliderValueLabel.text = String(Int(intensitySlider.value * 100))
+        filtersArray[currentFilterIndex].defaultValue = intensitySlider.value
         applyProcessing()
     }
     
@@ -90,18 +91,18 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-        guard let image = info[.originalImage] as? UIImage else {
-            return
-        }
-        imageView.image = image
+        guard let image = info[.originalImage] as? UIImage else { return }
+        //imageView.image = image
         currentImage = image
         
         saveButton.isEnabled = true
+        intensitySlider.isEnabled = true
         
         let beginImage = CIImage(image: currentImage)
         currentFilter.setValue(beginImage, forKey: kCIInputImageKey)
-        setFilter()
         applyProcessing()
+        
+        setFilter()
         dismiss(animated: true)
     }
     
@@ -125,17 +126,13 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     func applyProcessing() {
-        guard let outputImg = currentFilter.outputImage else { return }
         
-        //currentFilter = CIFilter(name: filtersArray[currentFilterIndex].CIFilterName)
         let inputKey = filtersArray[currentFilterIndex].inputKeyName
-        
         currentFilter.setValue(intensitySlider.value, forKey: inputKey!)
         
-        
-        if let cgImage = context.createCGImage(outputImg, from: outputImg.extent) {
+        if let cgImage = context.createCGImage(currentFilter.outputImage!, from: currentFilter.outputImage!.extent) {
             let processedImage = UIImage(cgImage: cgImage)
-            imageView.image = processedImage
+            self.imageView.image = processedImage
         }
     }
     
@@ -145,17 +142,17 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         currentFilter = CIFilter(name: filtersArray[currentFilterIndex].CIFilterName)
         let beginImage = CIImage(image: currentImage)
         currentFilter.setValue(beginImage, forKey: kCIInputImageKey)
+        
         applyProcessing()
     }
     
     func applySliderAndImage() {
         let filter = filtersArray[currentFilterIndex]
         currentFilterImage.image = filter.filterImage
-        sliderValueLabel.text = String(filter.defaultValue)
-        
         intensitySlider.minimumValue = Float(filter.minValue)
         intensitySlider.maximumValue = Float(filter.maxValue)
         intensitySlider.value = Float(filter.defaultValue)
+        sliderValueLabel.text = String(Int(intensitySlider.value * 100))
     }
     
     
